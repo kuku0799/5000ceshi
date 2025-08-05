@@ -1,0 +1,10 @@
+[33m9bcce33[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Fix missing ruamel.yaml dependency and add dependency fix script
+[33mee3649e[m Add deployment summary document
+[33m00dfd56[m Add automatic Python3 installation support
+[33mf2827d0[m Add link testing script
+[33m66a189c[m Add quick deployment guide
+[33m70f5193[m Update GitHub repository information
+[33m9b4bf7c[m Initial commit: OpenClash Node Management System with Web Editor
+[33mc357338[m 完善 FastAPI + Vue.js 管理面板：添加配置管理、日志系统、备份功能和卸载脚本
+[33mb035995[m 清理旧代码，保留 FastAPI + Vue.js 管理面板
+[33mb5b51e7[m Fix install script: auto-download scripts from GitHub

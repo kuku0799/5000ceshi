@@ -1,0 +1,11 @@
+# 在此粘贴你的节点链接，一行一个，支持 ss:// vmess:// vless:// trojan:// socks:// socks5://协议
+
+# 示例格式：
+# ss://YWVzLTI1Ni1nY206cGFzc3dvcmQ=@server.com:8388#SS节点
+# vmess://eyJhZGQiOiJzZXJ2ZXIuY29tIiwicG9ydCI6NDQzLCJpZCI6IjEyMzQ1Njc4LTkwYWItMTFlYy1hYzE1LTAwMTYzYzFhYzE1NSIsImFpZCI6MCwidHlwZSI6Im5vbmUiLCJob3N0IjoiIiwicGF0aCI6IiIsInRscyI6InRscyJ9#Vmess节点
+# vless://uuid@server.com:443?security=tls#Vless节点
+# trojan://password@server.com:443#Trojan节点
+# socks://username:password@server.com:1080#Socks节点（带认证）
+# socks://server.com:1080#Socks节点（无认证）
+# socks5://username:password@server.com:1080#Socks5节点（带认证）
+# socks5://server.com:1080#Socks5节点（无认证）
