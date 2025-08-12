@@ -35,6 +35,7 @@ def inject_groups(config, node_names: list) -> tuple:
     injected_total = 0
     injected_groups = 0
 
+    desired_set = set(node_names)
     for group_name in target_groups:
         group = group_map.get(group_name)
         if not group:
@@ -42,6 +43,10 @@ def inject_groups(config, node_names: list) -> tuple:
             continue
 
         original = group.get("proxies", [])
+        # 同步删除：去除策略组中不存在于期望集合的代理（可开关）
+        from config import GROUPS_REMOVE_STALE
+        if GROUPS_REMOVE_STALE:
+            original = [p for p in original if (p in ("REJECT", "DIRECT")) or (p in desired_set)]
         reserved = [p for p in original if p not in ("REJECT", "DIRECT") and p not in valid_names]
         updated = ["REJECT", "DIRECT"] + valid_names + reserved
 

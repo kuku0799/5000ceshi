@@ -5,7 +5,7 @@ import os
 import re
 from jx import parse_nodes
 from log import write_log
-from config import OPENCLASH_CONFIG_PATH
+from config import OPENCLASH_CONFIG_PATH, SYNC_REMOVE_STALE_PROXIES
 
 yaml = YAML()
 yaml.preserve_quotes = True
@@ -55,6 +55,15 @@ def inject_proxies(config, nodes: list) -> tuple:
         new_nodes.append(node)
         existing_names.add(name)
         injected += 1
+
+    # 同步删除：移除 YAML 中已存在但本次未出现的节点（可配置）
+    if SYNC_REMOVE_STALE_PROXIES:
+        desired_names = {n.get("name") for n in nodes}
+        before = len(config["proxies"])
+        config["proxies"] = [p for p in config["proxies"] if p.get("name") in desired_names or p.get("name") is None]
+        removed = before - len(config["proxies"])
+        if removed > 0:
+            write_log(f"🧹 [zw] 移除已删除的代理节点 {removed} 个")
 
     config["proxies"].extend(new_nodes)
     return config, injected, skipped_invalid, skipped_duplicate

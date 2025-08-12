@@ -55,4 +55,8 @@ LOG_BACKUP_COUNT = int(os.getenv("LOG_BACKUP_COUNT", "3"))
 BACKUP_DIR = os.getenv("BACKUP_DIR", os.path.join(BASE_DIR, "backups"))
 BACKUP_COUNT = int(os.getenv("BACKUP_COUNT", "5"))
 
+# 同步策略
+SYNC_REMOVE_STALE_PROXIES = _bool_env("SYNC_REMOVE_STALE_PROXIES", True)
+GROUPS_REMOVE_STALE = _bool_env("GROUPS_REMOVE_STALE", True)
+
 
