@@ -5,15 +5,17 @@ import os
 import re
 from jx import parse_nodes
 from log import write_log
+from config import OPENCLASH_CONFIG_PATH
 
 yaml = YAML()
 yaml.preserve_quotes = True
 
 def get_openclash_config_path() -> str:
     try:
-        return os.popen("uci get openclash.config.config_path").read().strip()
+        path = os.popen("uci get openclash.config.config_path").read().strip()
+        return path or OPENCLASH_CONFIG_PATH
     except Exception:
-        return ""
+        return OPENCLASH_CONFIG_PATH
 
 def load_config(path: str):
     try:
@@ -23,8 +25,8 @@ def load_config(path: str):
         return {}
 
 def is_valid_name(name: str) -> bool:
-    # 只允许英文字母、数字、下划线、短横线、点，不允许其他字符
-    return bool(re.match(r'^[\w\-\.]+$', name))
+    # 允许中文、字母数字、下划线、短横线、点
+    return bool(re.match(r'^[\w\-\.\u4e00-\u9fa5]+$', name))
 
 def inject_proxies(config, nodes: list) -> tuple:
     if "proxies" not in config or not isinstance(config["proxies"], list):

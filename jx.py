@@ -14,7 +14,8 @@ def decode_base64(data: str) -> str:
         return ""
 
 def clean_name(name: str, existing_names: set) -> str:
-    name = re.sub(r'[^一-龥a-zA-Z0-9_\-]', '', name.strip())[:24]
+    # 统一名称规则：允许中文、字母数字、下划线、短横线、点
+    name = re.sub(r'[^\u4e00-\u9fa5a-zA-Z0-9_\-\.]', '', name.strip())[:24]
     original = name
     count = 1
     while name in existing_names:
@@ -59,21 +60,33 @@ def parse_nodes(file_path: str) -> List[Dict]:
         write_log(f"❌ [parse] 无法读取节点文件: {e}")
         return []
 
-    for line in lines:
+    for idx, line in enumerate(lines, 1):
         try:
             if line.startswith("ss://"):
                 raw = line[5:]
                 name = clean_name(extract_custom_name(line), existing_names)
+
                 if '@' in raw:
+                    # 兼容两种 userinfo：明文 method:password 或 base64(method:password)
                     info, server = raw.split("@", 1)
-                    info = decode_base64(info)
-                    if not info:
-                        raise ValueError("Base64解码失败")
-                    method, password = info.split(":", 1)
+                    info = unquote(info)
+
+                    if ":" in info:
+                        method, password = info.split(":", 1)
+                    else:
+                        decoded_info = decode_base64(info)
+                        if decoded_info and ":" in decoded_info:
+                            method, password = decoded_info.split(":", 1)
+                        else:
+                            raise ValueError("SS 用户信息既非明文也非可解的Base64")
+
                     hostport = server.split("#")[0].split("?")[0]
                     host, port = extract_host_port(hostport)
+
+                    # 从整行中解析 plugin 参数（若存在）
                     query = urlparse(line).query
                     plugin_opts = parse_plugin_params(query)
+
                     if not all([host, port, method, password]):
                         raise ValueError("字段缺失")
 
@@ -89,11 +102,16 @@ def parse_nodes(file_path: str) -> List[Dict]:
                         node.update(plugin_opts)
                     parsed_nodes.append(node)
                 else:
-                    decoded = decode_base64(raw.split("#")[0].split("?")[0])
+                    # 整段Base64：base64(method:password@host:port?plugin=...)
+                    b64 = unquote(raw.split("#")[0].split("?", 1)[0])
+                    decoded = decode_base64(b64)
                     if not decoded:
                         raise ValueError("Base64解码失败")
-                    method_password, server = decoded.split("@")
-                    method, password = method_password.split(":")
+
+                    # 去掉可能的多余片段
+                    decoded_main = decoded.strip().split("#")[0]
+                    method_password, server = decoded_main.split("@", 1)
+                    method, password = method_password.split(":", 1)
                     host, port = extract_host_port(server)
                     if not all([host, port, method, password]):
                         raise ValueError("字段缺失")
@@ -108,7 +126,8 @@ def parse_nodes(file_path: str) -> List[Dict]:
                 success_count += 1
 
             elif line.startswith("vmess://"):
-                decoded = decode_base64(line[8:].split("#")[0])
+                payload = unquote(line[8:].split("#")[0])
+                decoded = decode_base64(payload)
                 if not decoded:
                     raise ValueError("Base64解码失败")
                 node = json.loads(decoded)
@@ -186,7 +205,8 @@ def parse_nodes(file_path: str) -> List[Dict]:
                 # 检查是否是新的完全 Base64 编码格式（包含查询参数）
                 if "?" in body:
                     # 新格式：socks://base64(username:password@host:port)?remarks=xxx
-                    base64_part = body.split("?")[0]
+                    base64_part = body.split("?", 1)[0]
+                    base64_part = unquote(base64_part)
                     query_part = body.split("?", 1)[1] if "?" in body else ""
                     
                     # 从查询参数中提取节点名
@@ -290,7 +310,8 @@ def parse_nodes(file_path: str) -> List[Dict]:
                 error_count += 1
 
         except Exception as e:
-            write_log(f"❌ [parse] 解析失败 ({line[:30]}) → {e}")
+            proto = line.split("://", 1)[0] if "://" in line else "unknown"
+            write_log(f"❌ [parse] 第{idx}行 协议={proto} 解析失败: {e} | 片段={line[:60]}")
             error_count += 1
 
     write_log(f"✅ [parse] 成功解析 {success_count} 条，失败 {error_count} 条")

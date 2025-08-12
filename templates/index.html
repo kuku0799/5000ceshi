@@ -185,6 +185,12 @@
             gap: 10px;
         }
 
+        .right-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
         .editor-container {
             flex: 1;
             position: relative;
@@ -367,13 +373,21 @@
             <div class="editor-panel">
                 <div class="editor-header">
                     <div class="editor-title" id="currentFile">请选择文件</div>
-                    <div class="editor-actions">
+                    <div class="right-actions">
+                        <button class="btn btn-secondary" onclick="verifyNow()" id="verifyBtn">
+                            ✅ 预检
+                        </button>
+                        <button class="btn btn-primary" onclick="syncNow()" id="syncBtn">
+                            🔄 同步
+                        </button>
+                        <div class="editor-actions">
                         <button class="btn btn-success" onclick="saveFile()" id="saveBtn" disabled>
                             💾 保存
                         </button>
                         <button class="btn btn-danger" onclick="deleteFile()" id="deleteBtn" disabled>
                             🗑️ 删除
                         </button>
+                        </div>
                     </div>
                 </div>
                 <div class="editor-container">
@@ -581,6 +595,38 @@
                 }
             } catch (error) {
                 showNotification('网络错误: ' + error.message, 'error');
+            }
+        }
+
+        // 预检（解析 + 注入 + openclash 验证）
+        async function verifyNow() {
+            try {
+                const resp = await fetch('/api/verify', { method: 'POST' });
+                const data = await resp.json();
+                if (data.success) {
+                    const r = data.result || {};
+                    showNotification(`预检：${r.message} | 解析=${r.parsed_total} 注入=${r.injected} 重复=${r.duplicate} 无效=${r.invalid}`,
+                                     r.verify_pass ? 'success' : 'error');
+                } else {
+                    showNotification('预检失败: ' + (data.error || '未知错误'), 'error');
+                }
+            } catch (e) {
+                showNotification('网络错误: ' + e.message, 'error');
+            }
+        }
+
+        // 手动同步（执行 zr.py）
+        async function syncNow() {
+            try {
+                const resp = await fetch('/api/sync', { method: 'POST' });
+                const data = await resp.json();
+                if (data.success) {
+                    showNotification('同步完成', 'success');
+                } else {
+                    showNotification('同步失败: ' + (data.error || data.stderr || '未知错误'), 'error');
+                }
+            } catch (e) {
+                showNotification('网络错误: ' + e.message, 'error');
             }
         }
 

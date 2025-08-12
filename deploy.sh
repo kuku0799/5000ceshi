@@ -150,7 +150,7 @@ download_files() {
         "https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/jk.sh"
     
     # 下载 Python 文件
-    for file in zr.py jx.py zw.py zc.py log.py; do
+    for file in zr.py jx.py zw.py zc.py log.py config.py; do
         wget -O "/root/OpenClashManage/${file}" \
             "https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${file}"
     done
@@ -197,6 +197,12 @@ install_dependencies() {
         log_warn "pip3 未找到，使用 opkg 安装依赖..."
         opkg install python3-flask python3-werkzeug python3-ruamel-yaml
         log_success "使用 opkg 安装依赖完成"
+    fi
+
+    # 可选依赖：inotify 工具，提升文件监控为事件驱动
+    if command -v opkg &> /dev/null; then
+        opkg update >/dev/null 2>&1 || true
+        opkg install inotify-tools >/dev/null 2>&1 || true
     fi
 }
 

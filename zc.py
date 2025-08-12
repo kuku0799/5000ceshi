@@ -16,7 +16,8 @@ def inject_groups(config, node_names: list) -> tuple:
             f.write(f"[{timestamp}] {msg}\n")
 
     def is_valid_name(name: str) -> bool:
-        return bool(re.match(r'^[\w\-\.]+$', name))
+        # 允许中文、字母数字、下划线、短横线、点
+        return bool(re.match(r'^[\w\-\.\u4e00-\u9fa5]+$', name))
 
     # ✅ 节点名称合法性校验
     valid_names = []
